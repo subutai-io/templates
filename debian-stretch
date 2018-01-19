@@ -1,0 +1,90 @@
+#!/bin/sh
+
+EXTRA=openssh-server,openssh-client,iputils-ping,vim
+
+fail() {
+    echo $2
+    exit $1
+}
+
+. ./config
+
+# Shortcuts
+ROOTRW=$BTRFS_ROOT/$BTRFS_BUILD/rootfs.rw
+VARRW=$BTRFS_ROOT/$BTRFS_BUILD/var.rw
+OPTRW=$BTRFS_ROOT/$BTRFS_BUILD/opt.rw
+HOMERW=$BTRFS_ROOT/$BTRFS_BUILD/home.rw
+ROOTRO=$BTRFS_ROOT/$BTRFS_BUILD/rootfs
+VARRO=$BTRFS_ROOT/$BTRFS_BUILD/var
+OPTRO=$BTRFS_ROOT/$BTRFS_BUILD/opt
+HOMERO=$BTRFS_ROOT/$BTRFS_BUILD/home
+DELTAS=$BTRFS_ROOT/$BTRFS_BUILD/deltas
+
+# Do a bit of sanity test
+[ ! -d $BTRFS_ROOT ] && fail 1 "The directory $BTRFS_ROOT does not exists!" 
+
+[ -d $BTRFS_ROOT/$BTRFS_BUILD ] && fail 2 "The directory $BTRFS_ROOT/$BTRFS_BUILD already exists!" 
+
+sudo -v || fail 3 "SUDO does not appear to be working"
+
+# Create necessary subvolumes
+sudo btrfs subvolume create $BTRFS_ROOT/$BTRFS_BUILD || fail 3 "Unable to create build directory $BTRFS_ROOT/$BTRFS_BUILD"
+sudo btrfs subvolume create $ROOTRW || fail 3 "Unable to create rootfs directory $ROOTRW"
+
+# Bootstrap Debian
+sudo debootstrap --include=$EXTRA stable $ROOTRW
+
+# Mount proc and sys
+sudo mount sysfs $ROOTFS/sys -t sysfs
+sudo mount proc $ROOTFS/proc -t proc
+
+# Create package list
+sudo chroot $ROOTFS "dpkg --get-selections > /packages"
+sudo mv $ROOTFS/packages $BTRFS_ROOT/$BTRFS_BUILD
+
+# Clean up 
+sudo chroot $ROOTFS apt-get clean
+
+# Unmount
+sudo umount $ROOTFS/sys
+sudo umount $ROOTFS/proc
+
+# Deal with mounts
+sudo btrfs subvolume create $VARRW
+sudo mv $ROOTRW/var/* $VARRW
+
+sudo btrfs subvolume create $OPTRW
+sudo mv $ROOTRW/opt/* $OPTRW
+
+sudo btrfs subvolume create $HOMERW
+sudo mv $ROOTRW/home/* $HOMERW
+
+# Finally snapshot all
+sudo btrfs subvolume snapshot -r $ROOTRW $ROOTRO
+sudo btrfs subvolume snapshot -r $VARRW $VARRO
+sudo btrfs subvolume snapshot -r $OPTRW $OPTRO
+sudo btrfs subvolume snapshot -r $HOMERW $HOMERO
+
+# Save deltas
+sudo mkdir $DELTAS
+sudo btrfs send -f $DELTAS/rootfs.delta $ROOTRO
+sudo btrfs send -f $DELTAS/var.delta $VARRO
+sudo btrfs send -f $DELTAS/opt.delta $OPTRO
+sudo btrfs send -f $DELTAS/home.delta $HOMERO
+
+# Delete subvolumes
+sudo btrfs subvolume delete $ROOTRW
+sudo btrfs subvolume delete $ROOTRO
+sudo btrfs subvolume delete $VARRW
+sudo btrfs subvolume delete $VARRO
+sudo btrfs subvolume delete $OPTRW
+sudo btrfs subvolume delete $OPTRO
+sudo btrfs subvolume delete $HOMERW
+sudo btrfs subvolume delete $HOMERO
+
+# Create config
+
+
+exit 0
+
+# vim: ts=4 et nowrap autoindent
