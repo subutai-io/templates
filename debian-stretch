@@ -10,6 +10,7 @@ fail() {
 . ./config
 
 # Shortcuts
+CWD=`pwd`
 ROOTRW=$BTRFS_ROOT/$BTRFS_BUILD/rootfs.rw
 VARRW=$BTRFS_ROOT/$BTRFS_BUILD/var.rw
 OPTRW=$BTRFS_ROOT/$BTRFS_BUILD/opt.rw
@@ -44,7 +45,7 @@ debian-stretch
 EOF
 
 # Create /etc/networking/interfaces
-cat <<-EOF | sudo chroot $ROOTRW bin/bash -c "cat >/etc/networking/interfaces"
+cat <<-EOF | sudo chroot $ROOTRW bin/bash -c "cat >/etc/network/interfaces"
 auto lo
 iface lo inet loopback
 
@@ -86,6 +87,9 @@ sudo btrfs send -f $DELTAS/var.delta $VARRO
 sudo btrfs send -f $DELTAS/opt.delta $OPTRO
 sudo btrfs send -f $DELTAS/home.delta $HOMERO
 
+# Make sure deltas can be read by a normal user
+sudo chmod 644 $DELTAS/*
+
 # Delete subvolumes
 sudo btrfs subvolume delete $ROOTRW
 sudo btrfs subvolume delete $ROOTRO
@@ -110,8 +114,8 @@ lxc.mount.entry = /var/snap/subutai-master/common/lxc/debian-stretch/home home n
 lxc.mount.entry = /var/snap/subutai-master/common/lxc/debian-stretch/opt opt none bind,rw 0 0
 lxc.mount.entry = /var/snap/subutai-master/common/lxc/debian-stretch/var var none bind,rw 0 0
 lxc.include = /snap/subutai-master/current/share/lxc/config/ubuntu.common.conf
-subutai.template.package = /mnt/lib/lxc/lxc-data/tmpdir/debian-stretch-subutai-template_0.0.1_amd64.tar.gz
-subutai.template.version = 0.0.1
+subutai.template.package = /mnt/lib/lxc/lxc-data/tmpdir/debian-stretch-subutai-template_0.0.2_amd64.tar.gz
+subutai.template.version = 0.0.2
 lxc.rootfs = /var/snap/subutai-master/common/lxc/debian-stretch/rootfs
 lxc.utsname = debian-stretch
 lxc.mount = /var/snap/subutai-master/common/lxc/debian-stretch/fstab
@@ -133,8 +137,11 @@ cat <<-EOF | sudo tee $BTRFS_ROOT/$BTRFS_BUILD/fstab
 EOF
 
 # Bundle the darn thing in a tar.gz archive
-[ -d build ] || mkdir build
-(cd $BTRFS_ROOT/$BTRFS_BUILD ; tar cz * >build/debian-stretch-subutai-template_0.0.1_amd64.tar.gz)
+[ -d $CWD/build ] || mkdir $CWD/build
+(cd $BTRFS_ROOT/$BTRFS_BUILD ; tar cz * >$CWD/build/debian-stretch-subutai-template_0.0.2_amd64.tar.gz)
+
+# Finally nuke build
+sudo btrfs subvolume delete $BTRFS_ROOT/$BTRFS_BUILD
 
 exit 0
 
