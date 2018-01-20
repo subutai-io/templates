@@ -54,10 +54,11 @@ iface eth0 inet dhcp
 EOF
 
 # Set apt-get repos
-cat <<-EOF | sudo chroot $ROOTRW bin/bash -c "cat >/etc/apt/sources."
-deb http://httpredir.debian.org/debian/ stable main contrib non-free
-deb http://security.debian.org/ stable/updates main contrib non-free
+cat <<-EOF | sudo chroot $ROOTRW bin/bash -c "cat >/etc/apt/sources.list"
+deb http://httpredir.debian.org/debian/ stretch main contrib non-free
 deb http://httpredir.debian.org/debian/ stable-updates main contrib non-free
+deb http://httpredir.debian.org/debian stretch-backports main contrib non-free
+deb http://security.debian.org/debian-security stretch/updates main
 EOF
 
 # Run update
@@ -72,7 +73,8 @@ sudo mv $ROOTRW/packages $BTRFS_ROOT/$BTRFS_BUILD
 
 # Clean up 
 sudo chroot $ROOTRW bin/bash -c "apt-get clean"
-sudo chroot $ROOTRW bin/bash -c "rm /var/cache/apt/*bin"
+sudo chroot $ROOTRW bin/bash -c "rm /var/cache/apt/*.bin"
+sudo chroot $ROOTRW bin/bash -c "rm /var/lib/apt/lists/*"
 
 # Unmount
 sudo umount $ROOTFS/sys
@@ -115,7 +117,7 @@ sudo btrfs subvolume delete $HOMERW
 sudo btrfs subvolume delete $HOMERO
 
 # Create config
-cat <<-EOF | sudo tee $BTRFS_ROOT/$BTRFS_BUILD/config
+cat <<-EOF | sudo tee $BTRFS_ROOT/$BTRFS_BUILD/config >/dev/null
 # Subutai debian-stretch template
 lxc.arch = amd64
 # Network configuration
@@ -123,16 +125,16 @@ lxc.network.type = veth
 lxc.network.flags = up
 lxc.network.hwaddr = 00:16:3e:c2:4d:fa
 subutai.config.path = /snap/subutai-master/current/etc
-subutai.parent = debian-stretch-0.0.5
-lxc.mount.entry = /var/snap/subutai-master/common/lxc/debian-stretch-0.0.5/home home none bind,rw 0 0
-lxc.mount.entry = /var/snap/subutai-master/common/lxc/debian-stretch-0.0.5/opt opt none bind,rw 0 0
-lxc.mount.entry = /var/snap/subutai-master/common/lxc/debian-stretch-0.0.5/var var none bind,rw 0 0
+subutai.parent = debian-stretch-0.0.7
+lxc.mount.entry = /var/snap/subutai-master/common/lxc/debian-stretch-0.0.7/home home none bind,rw 0 0
+lxc.mount.entry = /var/snap/subutai-master/common/lxc/debian-stretch-0.0.7/opt opt none bind,rw 0 0
+lxc.mount.entry = /var/snap/subutai-master/common/lxc/debian-stretch-0.0.7/var var none bind,rw 0 0
 lxc.include = /snap/subutai-master/current/share/lxc/config/ubuntu.common.conf
-subutai.template.package = /mnt/lib/lxc/lxc-data/tmpdir/debian-stretch-0.0.5-subutai-template_1.0.0_amd64.tar.gz
+subutai.template.package = /mnt/lib/lxc/lxc-data/tmpdir/debian-stretch-0.0.7-subutai-template_1.0.0_amd64.tar.gz
 subutai.template.version = 1.0.0
-lxc.rootfs = /var/snap/subutai-master/common/lxc/debian-stretch-0.0.5/rootfs
-lxc.utsname = debian-stretch-0.0.5
-lxc.mount = /var/snap/subutai-master/common/lxc/debian-stretch-0.0.5/fstab
+lxc.rootfs = /var/snap/subutai-master/common/lxc/debian-stretch-0.0.7/rootfs
+lxc.utsname = debian-stretch-0.0.7
+lxc.mount = /var/snap/subutai-master/common/lxc/debian-stretch-0.0.7/fstab
 lxc.id_map = u 0 1114112 65536
 lxc.id_map = g 0 1114112 65536
 
@@ -142,7 +144,7 @@ lxc.autodev = 1
 lxc.kmsg = 0
 lxc.include = /snap/subutai-master/current/share/lxc/config/ubuntu.userns.conf
 lxc.network.link = lxcbr0
-lxc.rootfs.mount = /var/snap/subutai-master/common/lxc/debian-stretch-0.0.5/rootfs
+lxc.rootfs.mount = /var/snap/subutai-master/common/lxc/debian-stretch-0.0.7/rootfs
 lxc.network.script.up = /snap/subutai-master/current/bin/create_ovs_interface
 
 EOF
@@ -152,7 +154,7 @@ EOF
 
 # Bundle the darn thing in a tar.gz archive
 [ -d $CWD/build ] || mkdir $CWD/build
-(cd $BTRFS_ROOT/$BTRFS_BUILD ; tar cz * >$CWD/build/debian-stretch-0.0.5_subutai-template_1.0.0_amd64.tar.gz)
+(cd $BTRFS_ROOT/$BTRFS_BUILD ; tar cz * >$CWD/build/debian-stretch-0.0.7_subutai-template_1.0.0_amd64.tar.gz)
 
 # Finally nuke build
 sudo btrfs subvolume delete $BTRFS_ROOT/$BTRFS_BUILD
