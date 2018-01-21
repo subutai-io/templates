@@ -1,35 +1,46 @@
 #!/bin/sh
 
-EXTRA=openssh-server,openssh-client,iputils-ping,vim
+# A working btrfs mount point - any will do as long as root have write access
+BTRFS_ROOT=/var/snap/subutai-master/common/lxc
+
+# A folder which is used exclusively for this - can NOT exist and WILL
+# be cleaned out when done!
+BTRFS_BUILD=build
+
+# Extra base packages to be installed
+EXTRA=openssh-server,openssh-client,iputils-ping,vim,less
+
+# Name of resulting template
+NAME=debian-stretch-0.0.8
+VERSION=1.0.0
 
 fail() {
     echo $2
     exit $1
 }
 
-. ./config
-
 # Shortcuts
 CWD=`pwd`
-ROOTRW=$BTRFS_ROOT/$BTRFS_BUILD/rootfs.rw
-VARRW=$BTRFS_ROOT/$BTRFS_BUILD/var.rw
-OPTRW=$BTRFS_ROOT/$BTRFS_BUILD/opt.rw
-HOMERW=$BTRFS_ROOT/$BTRFS_BUILD/home.rw
-ROOTRO=$BTRFS_ROOT/$BTRFS_BUILD/rootfs
-VARRO=$BTRFS_ROOT/$BTRFS_BUILD/var
-OPTRO=$BTRFS_ROOT/$BTRFS_BUILD/opt
-HOMERO=$BTRFS_ROOT/$BTRFS_BUILD/home
-DELTAS=$BTRFS_ROOT/$BTRFS_BUILD/deltas
+BUILD=$BTRFS_ROOT/$BTRFS_BUILD
+ROOTRW=$BUILD/rootfs.rw
+VARRW=$BUILD/var.rw
+OPTRW=$BUILD/opt.rw
+HOMERW=$BUILD/home.rw
+ROOTRO=$BUILD/rootfs
+VARRO=$BUILD/var
+OPTRO=$BUILD/opt
+HOMERO=$BUILD/home
+DELTAS=$BUILD/deltas
 
 # Do a bit of sanity test
 [ ! -d $BTRFS_ROOT ] && fail 1 "The directory $BTRFS_ROOT does not exists!" 
 
-[ -d $BTRFS_ROOT/$BTRFS_BUILD ] && fail 2 "The directory $BTRFS_ROOT/$BTRFS_BUILD already exists!" 
+[ -d $BUILD ] && fail 2 "The directory $BUILD already exists!" 
 
 sudo -v || fail 3 "SUDO does not appear to be working"
 
 # Create necessary subvolumes
-sudo btrfs subvolume create $BTRFS_ROOT/$BTRFS_BUILD || fail 3 "Unable to create build directory $BTRFS_ROOT/$BTRFS_BUILD"
+sudo btrfs subvolume create $BUILD || fail 3 "Unable to create build directory $BUILD"
 sudo btrfs subvolume create $ROOTRW || fail 3 "Unable to create rootfs directory $ROOTRW"
 
 # Bootstrap Debian
@@ -69,7 +80,7 @@ sudo chroot $ROOTRW bin/bash -c "apt-get update"
 
 # Create package list
 sudo chroot $ROOTRW bin/bash -c "dpkg --get-selections > /packages"
-sudo mv $ROOTRW/packages $BTRFS_ROOT/$BTRFS_BUILD
+sudo mv $ROOTRW/packages $BUILD
 
 # Clean up 
 sudo chroot $ROOTRW bin/bash -c "apt-get clean"
@@ -117,7 +128,7 @@ sudo btrfs subvolume delete $HOMERW
 sudo btrfs subvolume delete $HOMERO
 
 # Create config
-cat <<-EOF | sudo tee $BTRFS_ROOT/$BTRFS_BUILD/config >/dev/null
+cat <<-EOF | sudo tee $BUILD/config >/dev/null
 # Subutai debian-stretch template
 lxc.arch = amd64
 # Network configuration
@@ -125,16 +136,16 @@ lxc.network.type = veth
 lxc.network.flags = up
 lxc.network.hwaddr = 00:16:3e:c2:4d:fa
 subutai.config.path = /snap/subutai-master/current/etc
-subutai.parent = debian-stretch-0.0.7
-lxc.mount.entry = /var/snap/subutai-master/common/lxc/debian-stretch-0.0.7/home home none bind,rw 0 0
-lxc.mount.entry = /var/snap/subutai-master/common/lxc/debian-stretch-0.0.7/opt opt none bind,rw 0 0
-lxc.mount.entry = /var/snap/subutai-master/common/lxc/debian-stretch-0.0.7/var var none bind,rw 0 0
+subutai.parent = $NAME
+lxc.mount.entry = /var/snap/subutai-master/common/lxc/$NAME/home home none bind,rw 0 0
+lxc.mount.entry = /var/snap/subutai-master/common/lxc/$NAME/opt opt none bind,rw 0 0
+lxc.mount.entry = /var/snap/subutai-master/common/lxc/$NAME/var var none bind,rw 0 0
 lxc.include = /snap/subutai-master/current/share/lxc/config/ubuntu.common.conf
-subutai.template.package = /mnt/lib/lxc/lxc-data/tmpdir/debian-stretch-0.0.7-subutai-template_1.0.0_amd64.tar.gz
-subutai.template.version = 1.0.0
-lxc.rootfs = /var/snap/subutai-master/common/lxc/debian-stretch-0.0.7/rootfs
-lxc.utsname = debian-stretch-0.0.7
-lxc.mount = /var/snap/subutai-master/common/lxc/debian-stretch-0.0.7/fstab
+subutai.template.package = /mnt/lib/lxc/lxc-data/tmpdir/$NAME-subutai-template_$VERSION_amd64.tar.gz
+subutai.template.version = $VERSION
+lxc.rootfs = /var/snap/subutai-master/common/lxc/$NAME/rootfs
+lxc.utsname = $NAME
+lxc.mount = /var/snap/subutai-master/common/lxc/$NAME/fstab
 lxc.id_map = u 0 1114112 65536
 lxc.id_map = g 0 1114112 65536
 
@@ -144,20 +155,20 @@ lxc.autodev = 1
 lxc.kmsg = 0
 lxc.include = /snap/subutai-master/current/share/lxc/config/ubuntu.userns.conf
 lxc.network.link = lxcbr0
-lxc.rootfs.mount = /var/snap/subutai-master/common/lxc/debian-stretch-0.0.7/rootfs
+lxc.rootfs.mount = /var/snap/subutai-master/common/lxc/$NAME/rootfs
 lxc.network.script.up = /snap/subutai-master/current/bin/create_ovs_interface
 
 EOF
 
-cat <<-EOF | sudo tee $BTRFS_ROOT/$BTRFS_BUILD/fstab
+cat <<-EOF | sudo tee $BUILD/fstab
 EOF
 
 # Bundle the darn thing in a tar.gz archive
 [ -d $CWD/build ] || mkdir $CWD/build
-(cd $BTRFS_ROOT/$BTRFS_BUILD ; tar cz * >$CWD/build/debian-stretch-0.0.7_subutai-template_1.0.0_amd64.tar.gz)
+(cd $BUILD ; tar cz * >$CWD/build/$NAME-subutai-template_$VERSION_amd64.tar.gz)
 
 # Finally nuke build
-sudo btrfs subvolume delete $BTRFS_ROOT/$BTRFS_BUILD
+sudo btrfs subvolume delete $BUILD
 
 exit 0
 
