@@ -1,0 +1,157 @@
+
+# Do not run directly!
+
+fail() {
+    echo $2
+    exit $1
+}
+
+# Shortcuts
+CWD=`pwd`
+BUILD=${BTRFS_ROOT}/${BTRFS_BUILD}
+ROOTRW=${BUILD}/rootfs.rw
+VARRW=${BUILD}/var.rw
+OPTRW=${BUILD}/opt.rw
+HOMERW=${BUILD}/home.rw
+ROOTRO=${BUILD}/rootfs
+VARRO=${BUILD}/var
+OPTRO=${BUILD}/opt
+HOMERO=${BUILD}/home
+DELTAS=${BUILD}/deltas
+
+# Do a bit of sanity test
+[ ! -d ${BTRFS_ROOT} ] && fail 1 "The directory ${BTRFS_ROOT} does not exists!" 
+
+[ -d ${BUILD} ] && fail 2 "The directory ${BUILD} already exists!" 
+
+sudo -v || fail 3 "SUDO does not appear to be working"
+
+# Create necessary subvolumes
+sudo btrfs subvolume create ${BUILD} || fail 3 "Unable to create build directory ${BUILD}"
+sudo btrfs subvolume create ${ROOTRW} || fail 3 "Unable to create rootfs directory ${ROOTRW}"
+
+# Bootstrap Debian
+sudo debootstrap --include=${EXTRA} stable ${ROOTRW}
+
+# Mount proc and sys
+sudo mount sysfs ${ROOTRW}/sys -t sysfs
+sudo mount proc ${ROOTRW}/proc -t proc
+
+# Update hostname
+cat <<-EOF | sudo chroot ${ROOTRW} bin/bash -c "cat >/etc/hostname"
+debian-stretch
+EOF
+
+# Create /etc/networking/interfaces
+cat <<-EOF | sudo chroot ${ROOTRW} bin/bash -c "cat >/etc/network/interfaces"
+auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet dhcp
+EOF
+
+# Set apt-get repos
+echo "${REPOS}" | sudo chroot ${ROOTRW} bin/bash -c "cat >/etc/apt/sources.list"
+
+# Run update
+sudo chroot ${ROOTRW} bin/bash -c "apt-get update"
+
+# Optional extras
+#sudo chroot ${ROOTRW} bin/bash -c "apt-get install aptitude"
+
+# Create package list
+sudo chroot ${ROOTRW} bin/bash -c "dpkg --get-selections > /packages"
+sudo mv ${ROOTRW}/packages $BUILD
+
+# Clean up 
+sudo chroot ${ROOTRW} bin/bash -c "apt-get clean"
+sudo chroot ${ROOTRW} bin/bash -c "rm /var/cache/apt/*.bin"
+sudo chroot ${ROOTRW} bin/bash -c "rm /var/lib/apt/lists/*"
+
+# Unmount
+sudo umount ${ROOTFS}/sys
+sudo umount ${ROOTFS}/proc
+
+# Deal with mounts
+sudo btrfs subvolume create ${VARRW}
+sudo mv ${ROOTRW}/var/* ${VARRW}
+
+sudo btrfs subvolume create ${OPTRW}
+sudo mv ${ROOTRW}/opt/* ${OPTRW}
+
+sudo btrfs subvolume create ${HOMERW}
+sudo mv $ROOTRW/home/* ${HOMERW}
+
+# Finally snapshot all
+sudo btrfs subvolume snapshot -r ${ROOTRW} ${ROOTRO}
+sudo btrfs subvolume snapshot -r ${VARRW} ${VARRO}
+sudo btrfs subvolume snapshot -r ${OPTRW} ${OPTRO}
+sudo btrfs subvolume snapshot -r ${HOMERW} ${HOMERO}
+
+# Save deltas
+sudo mkdir ${DELTAS}
+sudo btrfs send -f ${DELTAS}/rootfs.delta ${ROOTRO}
+sudo btrfs send -f ${DELTAS}/var.delta ${VARRO}
+sudo btrfs send -f ${DELTAS}/opt.delta ${OPTRO}
+sudo btrfs send -f ${DELTAS}/home.delta ${HOMERO}
+
+# Make sure deltas can be read by a normal user
+sudo chmod 644 $DELTAS/*
+
+# Delete subvolumes
+sudo btrfs subvolume delete ${ROOTRW}
+sudo btrfs subvolume delete ${ROOTRO}
+sudo btrfs subvolume delete ${VARRW}
+sudo btrfs subvolume delete ${VARRO}
+sudo btrfs subvolume delete ${OPTRW}
+sudo btrfs subvolume delete ${OPTRO}
+sudo btrfs subvolume delete ${HOMERW}
+sudo btrfs subvolume delete ${HOMERO}
+
+# Create config
+cat <<-EOF | sudo tee ${BUILD}/config >/dev/null
+# Subutai debian-stretch template
+lxc.arch = amd64
+# Network configuration
+lxc.network.type = veth
+lxc.network.flags = up
+lxc.network.hwaddr = 00:16:3e:c2:4d:fa
+subutai.config.path = /snap/subutai-master/current/etc
+subutai.parent = ${NAME}
+lxc.mount.entry = /var/snap/subutai-master/common/lxc/${NAME}/home home none bind,rw 0 0
+lxc.mount.entry = /var/snap/subutai-master/common/lxc/${NAME}/opt opt none bind,rw 0 0
+lxc.mount.entry = /var/snap/subutai-master/common/lxc/${NAME}/var var none bind,rw 0 0
+lxc.include = /snap/subutai-master/current/share/lxc/config/ubuntu.common.conf
+subutai.template.package = /mnt/lib/lxc/lxc-data/tmpdir/${NAME}-subutai-template_${VERSION}_amd64.tar.gz
+subutai.template.version = ${VERSION}
+lxc.rootfs = /var/snap/subutai-master/common/lxc/${NAME}/rootfs
+lxc.utsname = ${NAME}
+lxc.mount = /var/snap/subutai-master/common/lxc/$NAME/fstab
+lxc.id_map = u 0 1114112 65536
+lxc.id_map = g 0 1114112 65536
+
+# systemD configuration
+lxc.mount.auto = cgroup:mixed
+lxc.autodev = 1
+lxc.kmsg = 0
+lxc.include = /snap/subutai-master/current/share/lxc/config/ubuntu.userns.conf
+lxc.network.link = lxcbr0
+lxc.rootfs.mount = /var/snap/subutai-master/common/lxc/${NAME}/rootfs
+lxc.network.script.up = /snap/subutai-master/current/bin/create_ovs_interface
+
+EOF
+
+cat <<-EOF | sudo tee $BUILD/fstab
+EOF
+
+# Bundle the darn thing in a tar.gz archive
+[ -d ${CWD}/build ] || mkdir ${CWD}/build
+(cd ${BUILD} ; tar cz * >${CWD}/build/${NAME}-subutai-template_${VERSION}_amd64.tar.gz)
+
+# Finally nuke build
+sudo btrfs subvolume delete ${BUILD}
+
+exit 0
+
+# vim: ts=4 et nowrap autoindent
