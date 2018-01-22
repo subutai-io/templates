@@ -8,12 +8,11 @@ BTRFS_ROOT=/var/snap/subutai-master/common/lxc
 BTRFS_BUILD=build
 
 # Set base
-BASE=testing
-REP=http://deb.debian.org/debian/
+BASE=xenial
+REP=http://archive.ubuntu.com/ubuntu/
 
 # Repos
 REPOS=$(cat <<'END_HEREDOC'
-deb http://httpredir.debian.org/debian/ buster main contrib non-free
 END_HEREDOC
 )
 
@@ -21,7 +20,7 @@ END_HEREDOC
 EXTRA=openssh-server,openssh-client,iputils-ping,vim,less
 
 # Name of resulting template
-NAME=debian-buster
+NAME=ubuntu-xenial
 VERSION=0.1.0
 
 . ./build-template

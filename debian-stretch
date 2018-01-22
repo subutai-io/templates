@@ -9,6 +9,7 @@ BTRFS_BUILD=build
 
 # Set base
 BASE=stable
+REP=http://deb.debian.org/debian/
 
 # Repos
 REPOS=$(cat <<'END_HEREDOC'

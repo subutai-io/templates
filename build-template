@@ -31,7 +31,7 @@ sudo btrfs subvolume create ${BUILD} || fail 3 "Unable to create build directory
 sudo btrfs subvolume create ${ROOTRW} || fail 3 "Unable to create rootfs directory ${ROOTRW}"
 
 # Bootstrap Debian
-sudo debootstrap --include=${EXTRA} stable ${ROOTRW}
+sudo debootstrap --include=${EXTRA} ${BASE} ${ROOTRW} ${REP}
 
 # Mount proc and sys
 sudo mount sysfs ${ROOTRW}/sys -t sysfs
