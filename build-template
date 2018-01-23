@@ -39,7 +39,7 @@ sudo mount proc ${ROOTRW}/proc -t proc
 
 # Update hostname
 cat <<-EOF | sudo chroot ${ROOTRW} bin/bash -c "cat >/etc/hostname"
-debian-stretch
+${NAME}
 EOF
 
 # Create /etc/networking/interfaces
@@ -52,7 +52,9 @@ iface eth0 inet dhcp
 EOF
 
 # Set apt-get repos
-echo "${REPOS}" | sudo chroot ${ROOTRW} bin/bash -c "cat >/etc/apt/sources.list"
+if [ -n "${REPOS}" ]; then
+    echo "${REPOS}" | sudo chroot ${ROOTRW} bin/bash -c "cat >/etc/apt/sources.list"
+fi
 
 # Run update
 sudo chroot ${ROOTRW} bin/bash -c "apt-get update"

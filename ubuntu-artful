@@ -8,14 +8,14 @@ BTRFS_ROOT=/var/snap/subutai-master/common/lxc
 BTRFS_BUILD=build
 
 # Set base
-BASE=xenial
+BASE=artful
 REP=http://archive.ubuntu.com/ubuntu/
 
 # Repos
 #REPOS=$(cat <<'END_HEREDOC'
-#deb http://archive.ubuntu.com/ubuntu xenial main restricted universe multiverse
-#deb http://archive.ubuntu.com/ubuntu xenial-updates main restricted universe multiverse
-#deb http://security.ubuntu.com/ubuntu xenial-security main restricted universe multiverse
+#deb http://archive.ubuntu.com/ubuntu artful main restricted universe multiverse
+#deb http://archive.ubuntu.com/ubuntu artful-updates main restricted universe multiverse
+#deb http://security.ubuntu.com/ubuntu artful-security main restricted universe multiverse
 #END_HEREDOC
 #)
 
@@ -23,7 +23,7 @@ REP=http://archive.ubuntu.com/ubuntu/
 EXTRA=openssh-server,openssh-client,iputils-ping,vim,less
 
 # Name of resulting template
-NAME=ubuntu-xenial
+NAME=ubuntu-artful
 VERSION=0.1.1
 
 . ./build-template
