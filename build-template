@@ -67,7 +67,8 @@ if [ -n "${REPOS}" ]; then
 fi
 
 # Run update
-sudo chroot ${ROOTRW} bin/bash -c "apt-get update"
+sudo chroot ${ROOTRW} bin/bash -c "apt-get -y update"
+sudo chroot ${ROOTRW} bin/bash -c "apt-get -y upgrade"
 
 # Optional extras
 #sudo chroot ${ROOTRW} bin/bash -c "apt-get install aptitude"
