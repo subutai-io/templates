@@ -27,27 +27,63 @@ DELTAS=${BUILD}/deltas
 sudo -v || fail 3 "SUDO does not appear to be working"
 
 # Create necessary subvolumes
+cat <<-BANNER
+*******************
+Creating subvolumes
+*******************
+BANNER
+
 sudo btrfs subvolume create ${BUILD} || fail 3 "Unable to create build directory ${BUILD}"
 sudo btrfs subvolume create ${ROOTRW} || fail 3 "Unable to create rootfs directory ${ROOTRW}"
 
 # Bootstrap Debian/Ubuntu
+cat <<-BANNER
+*******************
+Running debootstrap
+*******************
+BANNER
+
 sudo debootstrap --include=${EXTRA} ${BASE} ${ROOTRW} ${REP}
 
 # Mount proc and sys
+cat <<-BANNER
+*****************
+Mounting proc/sys
+*****************
+BANNER
+
 sudo mount sysfs ${ROOTRW}/sys -t sysfs
 sudo mount proc ${ROOTRW}/proc -t proc
 
 # Update hostname
+cat <<-BANNER
+****************
+Setting Hostname
+****************
+BANNER
+
 cat <<-EOF | sudo chroot ${ROOTRW} bin/bash -c "cat >/etc/hostname"
 ${NAME}
 EOF
 
 # Create subutai_template_version
+cat <<-BANNER
+********************************
+Setting Subutai Template Version
+********************************
+BANNER
+
 cat <<-EOF | sudo chroot ${ROOTRW} bin/bash -c "cat >/etc/subutai_template_version"
 ${NAME}@${VERSION}
 EOF
 
 # Create /etc/networking/interfaces
+cat <<-BANNER
+**************************
+Setting Network Interfaces
+**************************
+BANNER
+
 cat <<-EOF | sudo chroot ${ROOTRW} bin/bash -c "cat >/etc/network/interfaces"
 # Subutai Networking Default Configuration
 
@@ -62,31 +98,72 @@ iface eth0 inet dhcp
 EOF
 
 # Set apt-get repos
+cat <<-BANNER
+*************
+Setting Repos
+*************
+BANNER
+
 if [ -n "${REPOS}" ]; then
     echo "${REPOS}" | sudo chroot ${ROOTRW} bin/bash -c "cat >/etc/apt/sources.list"
 fi
 
 # Run update
-sudo chroot ${ROOTRW} bin/bash -c "apt-get -y update"
-sudo chroot ${ROOTRW} bin/bash -c "apt-get -y upgrade"
+cat <<-BANNER
+********
+Updating
+********
+BANNER
+
+sudo chroot ${ROOTRW} bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get -y update"
+sudo chroot ${ROOTRW} bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get -y upgrade"
 
 # Optional extras
-#sudo chroot ${ROOTRW} bin/bash -c "apt-get install aptitude"
+cat <<-BANNER
+*****************
+*****************
+Installing extras
+BANNER
+sudo chroot ${ROOTRW} bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get -y install ${PKGS}"
 
 # Create package list
+cat <<-BANNER
+*********************
+Creating package list
+*********************
+BANNER
+
 sudo chroot ${ROOTRW} bin/bash -c "dpkg --get-selections > /packages"
 sudo mv ${ROOTRW}/packages $BUILD
 
 # Clean up 
-sudo chroot ${ROOTRW} bin/bash -c "apt-get clean"
+cat <<-BANNER
+***********
+Cleaning up
+***********
+BANNER
+
+sudo chroot ${ROOTRW} bin/bash -c "apt-get -y clean"
 sudo chroot ${ROOTRW} bin/bash -c "rm /var/cache/apt/*.bin"
-sudo chroot ${ROOTRW} bin/bash -c "rm /var/lib/apt/lists/*"
+sudo chroot ${ROOTRW} bin/bash -c "rm -rf /var/lib/apt/lists/*"
 
 # Unmount
+cat <<-BANNER
+********************
+Unmounting temporary
+********************
+BANNER
+
 sudo umount ${ROOTFS}/sys
 sudo umount ${ROOTFS}/proc
 
 # Deal with mounts
+cat <<-BANNER
+********************
+Moving files
+********************
+BANNER
+
 sudo btrfs subvolume create ${VARRW}
 sudo mv ${ROOTRW}/var/* ${VARRW}
 
@@ -97,12 +174,24 @@ sudo btrfs subvolume create ${HOMERW}
 sudo mv $ROOTRW/home/* ${HOMERW}
 
 # Finally snapshot all
+cat <<-BANNER
+********************
+Readonly snapshots
+********************
+BANNER
+
 sudo btrfs subvolume snapshot -r ${ROOTRW} ${ROOTRO}
 sudo btrfs subvolume snapshot -r ${VARRW} ${VARRO}
 sudo btrfs subvolume snapshot -r ${OPTRW} ${OPTRO}
 sudo btrfs subvolume snapshot -r ${HOMERW} ${HOMERO}
 
 # Save deltas
+cat <<-BANNER
+********************
+Creating deltas
+********************
+BANNER
+
 sudo mkdir ${DELTAS}
 sudo btrfs send -f ${DELTAS}/rootfs.delta ${ROOTRO}
 sudo btrfs send -f ${DELTAS}/var.delta ${VARRO}
@@ -113,6 +202,12 @@ sudo btrfs send -f ${DELTAS}/home.delta ${HOMERO}
 sudo chmod 644 $DELTAS/*
 
 # Delete subvolumes
+cat <<-BANNER
+********************
+Deleting subvolumes
+********************
+BANNER
+
 sudo btrfs subvolume delete ${ROOTRW}
 sudo btrfs subvolume delete ${ROOTRO}
 sudo btrfs subvolume delete ${VARRW}
@@ -123,6 +218,12 @@ sudo btrfs subvolume delete ${HOMERW}
 sudo btrfs subvolume delete ${HOMERO}
 
 # Create config
+cat <<-BANNER
+************************
+Creating template config
+************************
+BANNER
+
 cat <<-EOF | sudo tee ${BUILD}/config >/dev/null
 # Subutai debian-stretch template
 lxc.arch = amd64
@@ -159,10 +260,22 @@ cat <<-EOF | sudo tee $BUILD/fstab
 EOF
 
 # Bundle the darn thing in a tar.gz archive
+cat <<-BANNER
+************************
+Creating Bundle
+************************
+BANNER
+
 [ -d ${CWD}/build ] || mkdir ${CWD}/build
 (cd ${BUILD} ; tar cz * >${CWD}/build/${NAME}-subutai-template_${VERSION}_amd64.tar.gz)
 
 # Finally nuke build
+cat <<-BANNER
+************************
+Cleaning up
+************************
+BANNER
+
 sudo btrfs subvolume delete ${BUILD}
 
 exit 0

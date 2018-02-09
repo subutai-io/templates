@@ -13,25 +13,22 @@ REP=http://archive.ubuntu.com/ubuntu/
 
 # Repos
 REPOS=$(cat <<'END_HEREDOC'
-deb http://us.archive.ubuntu.com/ubuntu/ xenial main restricted
-deb http://us.archive.ubuntu.com/ubuntu/ xenial-updates main restricted
-deb http://us.archive.ubuntu.com/ubuntu/ xenial universe
-deb http://us.archive.ubuntu.com/ubuntu/ xenial-updates universe
-deb http://us.archive.ubuntu.com/ubuntu/ xenial multiverse
-deb http://us.archive.ubuntu.com/ubuntu/ xenial-updates multiverse
+deb http://us.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse
+deb http://us.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse
 #deb http://us.archive.ubuntu.com/ubuntu/ xenial-backports main restricted universe multiverse
-deb http://security.ubuntu.com/ubuntu xenial-security main restricted
-deb http://security.ubuntu.com/ubuntu xenial-security universe
-deb http://security.ubuntu.com/ubuntu xenial-security multiverse
+deb http://security.ubuntu.com/ubuntu xenial-security main restricted universe multiverse
 END_HEREDOC
 )
 
 # Extra base packages to be installed
-EXTRA=openssh-server,openssh-client,iputils-ping,vim,less
+EXTRA=openssh-server,openssh-client,iputils-ping,less,vim
+
+# Install with full repos
+#PKGS=vim
 
 # Name of resulting template
 NAME=ubuntu-xenial
-VERSION=0.1.9
+VERSION=0.2.1
 
 . ./build-template
 
