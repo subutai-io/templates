@@ -124,7 +124,7 @@ cat <<-BANNER
 *****************
 Installing extras
 BANNER
-sudo chroot ${ROOTRW} bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get -y install ${PKGS}"
+sudo chroot ${ROOTRW} bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get -y --allow-unauthenticated install ${PKGS}"
 
 # Create package list
 cat <<-BANNER

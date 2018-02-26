@@ -21,11 +21,11 @@ END_HEREDOC
 )
 
 # Extra base packages to be installed
-EXTRA=openssh-server,openssh-client,iputils-ping,vim,less
+EXTRA=openssh-server,openssh-client,iputils-ping,vim,less,python,python3
 
 # Name of resulting template
 NAME=debian-stretch
-VERSION=0.2.1
+VERSION=0.2.4
 
 . ./build-template
 
