@@ -1,11 +1,11 @@
 #!/bin/sh
 
 # A working btrfs mount point - any will do as long as root have write access
-BTRFS_ROOT=/var/snap/subutai-master/common/lxc
+ZFS_ROOT=p0/subutai
 
 # A folder which is used exclusively for this - can NOT exist and WILL
 # be cleaned out when done!
-BTRFS_BUILD=build
+ZFS_BUILD=build
 
 # Set base
 BASE=stable
@@ -21,11 +21,11 @@ END_HEREDOC
 )
 
 # Extra base packages to be installed
-EXTRA=openssh-server,openssh-client,iputils-ping,vim,less,python,python3
+EXTRA=openssh-server,openssh-client,iputils-ping,vim,less,python
 
 # Name of resulting template
 NAME=debian-stretch
-VERSION=0.2.4
+VERSION=0.3.0
 
 . ./build-template
 
