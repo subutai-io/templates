@@ -223,30 +223,19 @@ BANNER
 cat <<-EOF | sudo tee /${BUILD}/config >/dev/null
 lxc.arch = amd64
 lxc.utsname = ${NAME}
-lxc.network.type = veth
-lxc.network.flags = up
-lxc.network.hwaddr = 00:16:3e:5b:ec:44
-lxc.id_map = u 0 65536 65536
-lxc.id_map = g 0 65536 65536
-lxc.mount.auto = cgroup:mixed
-lxc.autodev = 1
-lxc.kmsg = 0
 subutai.template = ${NAME}
-subutai.template.owner = dilshat
+subutai.template.owner = subutai
 subutai.template.version = ${VERSION}
-subutai.parent = ${NAME}
-#subutai.parent.owner = dilshat
+subutai.parent = debian-stretch
+subutai.parent.owner = subutai
 subutai.parent.version = ${VERSION}
-lxc.mount.entry = /var/lib/subutai/lxc/${NAME}/home home none bind,rw 0 0
-lxc.mount.entry = /var/lib/subutai/lxc/${NAME}/opt opt none bind,rw 0 0
-lxc.mount.entry = /var/lib/subutai/lxc/${NAME}/var var none bind,rw 0 0
-lxc.rootfs = /var/lib/subutai/lxc/${NAME}/rootfs
-lxc.rootfs.backend = zfs
-lxc.console = none
-lxc.tty = 0
-lxc.cgroup.devices.deny = c 5:1 rwm
-lxc.network.link = lxc-br
-
+lxc.mount.entry=/var/lib/subutai/lxc/${NAME}:subutai:${VERSION}/var var none bind,rw 0 0
+lxc.mount.entry=/var/lib/subutai/lxc/${NAME}:subutai:${VERSION}/opt opt none bind,rw 0 0
+lxc.mount.entry=/var/lib/subutai/lxc/${NAME}:subutai:${VERSION}/home home none bind,rw 0 0
+lxc.rootfs=/var/lib/subutai/lxc/${NAME}:subutai:${VERSION}/rootfs
+lxc.network.type = veth
+lxc.network.script.up = /usr/sbin/subutai-create-interface
+lxc.include = /usr/share/lxc/config/debian.common.conf
 EOF
 
 cat <<-EOF | sudo tee /${BUILD}/fstab
