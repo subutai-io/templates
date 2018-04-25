@@ -108,6 +108,17 @@ if [ -n "${REPOS}" ]; then
     echo "${REPOS}" | sudo chroot /${ROOTRW} bin/bash -c "cat >/etc/apt/sources.list"
 fi
 
+# Add Keys
+cat <<-BANNER
+***********
+Adding keys
+***********
+BANNER
+
+for KEY in ${KEYS}; do
+sudo chroot /${ROOTRW} bin/bash -c "apt-key adv --recv-keys --keyserver keyserver.ubuntu.com ${KEY}"
+done
+
 # Run update
 cat <<-BANNER
 ********
@@ -121,10 +132,19 @@ sudo chroot /${ROOTRW} bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get -y up
 # Optional extras
 cat <<-BANNER
 *****************
-*****************
 Installing extras
+*****************
 BANNER
 sudo chroot /${ROOTRW} bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get -y --allow-unauthenticated install ${PKGS}"
+
+# Run extra commands
+cat <<-BANNER
+**************
+Extra Commands
+**************
+BANNER
+
+sudo chroot /${ROOTRW} bin/bash -c "${CMDS}"
 
 # Create package list
 cat <<-BANNER
@@ -223,16 +243,17 @@ BANNER
 cat <<-EOF | sudo tee /${BUILD}/config >/dev/null
 lxc.arch = amd64
 lxc.utsname = ${NAME}
+lxc.rootfs.backend=zfs
 subutai.template = ${NAME}
-subutai.template.owner = subutai
+subutai.template.owner = ${OWNER}
 subutai.template.version = ${VERSION}
-subutai.parent = debian-stretch
-subutai.parent.owner = subutai
+subutai.parent = ${NAME}
+subutai.parent.owner = ${OWNER}
 subutai.parent.version = ${VERSION}
-lxc.mount.entry=/var/lib/subutai/lxc/${NAME}:subutai:${VERSION}/var var none bind,rw 0 0
-lxc.mount.entry=/var/lib/subutai/lxc/${NAME}:subutai:${VERSION}/opt opt none bind,rw 0 0
-lxc.mount.entry=/var/lib/subutai/lxc/${NAME}:subutai:${VERSION}/home home none bind,rw 0 0
-lxc.rootfs=/var/lib/subutai/lxc/${NAME}:subutai:${VERSION}/rootfs
+lxc.mount.entry=/var/lib/subutai/lxc/${NAME}:${OWNER}:${VERSION}/var var none bind,rw 0 0
+lxc.mount.entry=/var/lib/subutai/lxc/${NAME}:${OWNER}:${VERSION}/opt opt none bind,rw 0 0
+lxc.mount.entry=/var/lib/subutai/lxc/${NAME}:${OWNER}:${VERSION}/home home none bind,rw 0 0
+lxc.rootfs=/var/lib/subutai/lxc/${NAME}:${OWNER}:${VERSION}/rootfs
 lxc.network.type = veth
 lxc.network.script.up = /usr/sbin/subutai-create-interface
 lxc.include = /usr/share/lxc/config/debian.common.conf
