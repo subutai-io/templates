@@ -18,6 +18,7 @@ deb http://httpredir.debian.org/debian/ stable-updates main contrib non-free
 deb http://httpredir.debian.org/debian stretch-backports main contrib non-free
 deb http://security.debian.org/debian-security stretch/updates main
 deb http://devcdn.subutai.io:8080/kurjun/rest/apt /
+deb http://deb.subutai.io/subutai unstable main
 END_HEREDOC
 )
 
@@ -28,14 +29,14 @@ EXTRA=openssh-server,openssh-client,iputils-ping,vim,less,python,dirmngr
 KEYS="80260C65A4D79BC8"
 
 # More packages
-PKGS="curl influxdb influxdb-certs openjdk-8-jre management-dev"
+PKGS="curl influxdb influxdb-certs openjdk-8-jre management-no-snap"
 
 # Extra commands
-CMDS="wget -q 'https://sysnetcdn.subutai.io:8338/kurjun/rest/raw/get?owner=subutai&name=influxdb.conf' -O /etc/influxdb/influxdb.conf ; rm -rf /opt/subutai-mng/keystores"
+CMDS="wget -q 'https://sysnetcdn.subutai.io:8338/kurjun/rest/raw/get?owner=subutai&name=influxdb.conf' -O /etc/influxdb/influxdb.conf ; rm -rf /opt/subutai-mng/keystores ; sed -i 's/cdn.subutai.io/devcdn.subutai.io/' /opt/subutai-mng/bin/setenv ; sed -i 's/bazaar.subutai.io/devbazaar.subutai.io/' /opt/subutai-mng/bin/setenv"
 
 # Name of resulting template
 NAME=management
-VERSION=0.4.0
+VERSION=0.4.1
 OWNER=f9d6a36b3e9b1d985008e482680f2ddf584d98bd
 
 . ./build-template
