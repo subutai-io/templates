@@ -28,7 +28,7 @@ EXTRA=openssh-server,openssh-client,iputils-ping,less,vim,python,python3
 
 # Name of resulting template
 NAME=ubuntu-xenial
-VERSION=0.4.1
+VERSION=0.4.5
 OWNER=f9d6a36b3e9b1d985008e482680f2ddf584d98bd
 
 . ./build-template
