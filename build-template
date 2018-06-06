@@ -190,13 +190,19 @@ Moving files
 BANNER
 
 sudo zfs create ${VARRW}
-sudo mv /${ROOTRW}/var/* /${VARRW}
+if ! `ls -A /${ROOTRW}/var`; then
+    sudo mv /${ROOTRW}/var/* /${VARRW}
+fi
 
 sudo zfs create ${OPTRW}
-sudo mv /${ROOTRW}/opt/* /${OPTRW}
+if ! `ls -A /${ROOTRW}/opt`; then
+    sudo mv /${ROOTRW}/opt/* /${OPTRW}
+fi
 
 sudo zfs create ${HOMERW}
-sudo mv /$ROOTRW/home/* /${HOMERW}
+if ! `ls -A /${ROOTRW}/home`; then
+    sudo mv /$ROOTRW/home/* /${HOMERW}
+fi
 
 # Finally snapshot all
 cat <<-BANNER
