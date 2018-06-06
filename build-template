@@ -26,6 +26,10 @@ DELTAS=${BUILD}/deltas
 
 sudo -v || fail 3 "SUDO does not appear to be working"
 
+# Install build tools
+
+sudo apt-get install eatmydata debootstrap
+
 # Create necessary subvolumes
 cat <<-BANNER
 *******************
@@ -43,7 +47,7 @@ Running debootstrap
 *******************
 BANNER
 
-sudo debootstrap --include=${EXTRA} ${BASE} /${ROOTRW} ${REP}
+sudo eatmydata debootstrap --include=${EXTRA} ${BASE} /${ROOTRW} ${REP}
 
 # Mount proc and sys
 cat <<-BANNER
