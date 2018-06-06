@@ -132,7 +132,7 @@ Updating
 BANNER
 
 sudo chroot /${ROOTRW} /bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get -y update"
-sudo chroot /${ROOTRW} /bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get -y upgrade"
+sudo chroot /${ROOTRW} /bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade"
 
 # Optional extras
 cat <<-BANNER
