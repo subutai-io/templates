@@ -37,6 +37,7 @@ Creating subvolumes
 *******************
 BANNER
 
+sudo modprobe zfs || fail 3 "Unable to load ZFS kernel module"
 sudo zfs create ${BUILD} || fail 3 "Unable to create build directory ${BUILD}"
 sudo zfs create ${ROOTRW} || fail 3 "Unable to create rootfs directory ${ROOTRW}"
 
