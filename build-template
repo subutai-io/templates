@@ -67,7 +67,7 @@ Setting Hostname
 ****************
 BANNER
 
-cat <<-EOF | sudo chroot /${ROOTRW} bin/bash -c "cat >/etc/hostname"
+cat <<-EOF | sudo chroot /${ROOTRW} /bin/bash -c "cat >/etc/hostname"
 ${NAME}
 EOF
 
@@ -78,7 +78,7 @@ Setting Subutai Template Version
 ********************************
 BANNER
 
-cat <<-EOF | sudo chroot /${ROOTRW} bin/bash -c "cat >/etc/subutai_template_version"
+cat <<-EOF | sudo chroot /${ROOTRW} /bin/bash -c "cat >/etc/subutai_template_version"
 ${NAME}@${VERSION}
 EOF
 
@@ -89,7 +89,7 @@ Setting Network Interfaces
 **************************
 BANNER
 
-cat <<-EOF | sudo chroot /${ROOTRW} bin/bash -c "cat >/etc/network/interfaces"
+cat <<-EOF | sudo chroot /${ROOTRW} /bin/bash -c "cat >/etc/network/interfaces"
 # Subutai Networking Default Configuration
 
 # Local
@@ -110,7 +110,7 @@ Setting Repos
 BANNER
 
 if [ -n "${REPOS}" ]; then
-    echo "${REPOS}" | sudo chroot /${ROOTRW} bin/bash -c "cat >/etc/apt/sources.list"
+    echo "${REPOS}" | sudo chroot /${ROOTRW} /bin/bash -c "cat >/etc/apt/sources.list"
 fi
 
 # Add Keys
@@ -121,7 +121,7 @@ Adding keys
 BANNER
 
 for KEY in ${KEYS}; do
-sudo chroot /${ROOTRW} bin/bash -c "apt-key adv --recv-keys --keyserver keyserver.ubuntu.com ${KEY}"
+sudo chroot /${ROOTRW} /bin/bash -c "apt-key adv --recv-keys --keyserver keyserver.ubuntu.com ${KEY}"
 done
 
 # Run update
@@ -131,8 +131,8 @@ Updating
 ********
 BANNER
 
-sudo chroot /${ROOTRW} bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get -y update"
-sudo chroot /${ROOTRW} bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get -y upgrade"
+sudo chroot /${ROOTRW} /bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get -y update"
+sudo chroot /${ROOTRW} /bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get -y upgrade"
 
 # Optional extras
 cat <<-BANNER
@@ -140,7 +140,7 @@ cat <<-BANNER
 Installing extras
 *****************
 BANNER
-sudo chroot /${ROOTRW} bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get -y --allow-unauthenticated install ${PKGS}"
+sudo chroot /${ROOTRW} /bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get -y --allow-unauthenticated install ${PKGS}"
 
 # Run extra commands
 cat <<-BANNER
@@ -149,7 +149,7 @@ Extra Commands
 **************
 BANNER
 
-sudo chroot /${ROOTRW} bin/bash -c "${CMDS}"
+sudo chroot /${ROOTRW} /bin/bash -c "${CMDS}"
 
 # Create package list
 cat <<-BANNER
@@ -158,7 +158,7 @@ Creating package list
 *********************
 BANNER
 
-sudo chroot /${ROOTRW} bin/bash -c "dpkg --get-selections > /packages"
+sudo chroot /${ROOTRW} /bin/bash -c "dpkg --get-selections > /packages"
 sudo mv /${ROOTRW}/packages /$BUILD
 
 # Clean up 
@@ -168,9 +168,9 @@ Cleaning up
 ***********
 BANNER
 
-sudo chroot /${ROOTRW} bin/bash -c "apt-get -y clean"
-sudo chroot /${ROOTRW} bin/bash -c "rm /var/cache/apt/*.bin"
-sudo chroot /${ROOTRW} bin/bash -c "rm -rf /var/lib/apt/lists/*"
+sudo chroot /${ROOTRW} /bin/bash -c "apt-get -y clean"
+sudo chroot /${ROOTRW} /bin/bash -c "rm /var/cache/apt/*.bin"
+sudo chroot /${ROOTRW} /bin/bash -c "rm -rf /var/lib/apt/lists/*"
 
 # Unmount
 cat <<-BANNER
