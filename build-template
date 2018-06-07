@@ -271,6 +271,7 @@ lxc.rootfs=/var/lib/subutai/lxc/${NAME}:${OWNER}:${VERSION}/rootfs
 lxc.network.type = veth
 lxc.network.script.up = /usr/sbin/subutai-create-interface
 lxc.include = /usr/share/lxc/config/debian.common.conf
+lxc.tty = 0
 EOF
 
 cat <<-EOF | sudo -S tee /${BUILD}/fstab
