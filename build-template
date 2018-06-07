@@ -169,7 +169,7 @@ Cleaning up
 BANNER
 
 sudo -S chroot /${ROOTRW} /bin/bash -c "apt-get -y clean"
-sudo -S chroot /${ROOTRW} /bin/bash -c "rm /var/cache/apt/*.bin"
+sudo -S chroot /${ROOTRW} /bin/bash -c "rm -f /var/cache/apt/*.bin"
 sudo -S chroot /${ROOTRW} /bin/bash -c "rm -rf /var/lib/apt/lists/*"
 
 # Unmount
