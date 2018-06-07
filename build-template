@@ -78,6 +78,7 @@ Setting Subutai Template Version
 ********************************
 BANNER
 
+echo "Version is ${NAME}@${VERSION}"
 cat <<-EOF | sudo -S chroot /${ROOTRW} /bin/bash -c "cat >/etc/subutai_template_version"
 ${NAME}@${VERSION}
 EOF
@@ -229,6 +230,8 @@ sudo -S zfs send ${VARRW}@now | sudo -S tee /${DELTAS}/var.delta >/dev/null
 sudo -S zfs send ${OPTRW}@now | sudo -S tee /${DELTAS}/opt.delta >/dev/null
 sudo -S zfs send ${HOMERW}@now | sudo -S tee /${DELTAS}/home.delta >/dev/null
 
+ls -l /${DELTAS}/*.delta
+
 # Make sure deltas can be read by a normal user
 sudo -S chmod 644 /${DELTAS}/*
 
@@ -282,6 +285,7 @@ BANNER
 
 [ -d ${CWD}/build ] || mkdir ${CWD}/build
 (cd /${BUILD} ; tar cz * >${CWD}/build/${NAME}-subutai-template_${VERSION}_amd64.tar.gz)
+ls -l ${CWD}/build/${NAME}-subutai-template_${VERSION}_amd64.tar.gz
 
 # Finally nuke build
 cat <<-BANNER
