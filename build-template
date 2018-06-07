@@ -24,11 +24,11 @@ DELTAS=${BUILD}/deltas
 
 [ -d ${BUILD} ] && fail 2 "The directory ${BUILD} already exists!" 
 
-sudo -v || fail 3 "SUDO does not appear to be working"
+sudo -S -v || fail 3 "sudo -S does not appear to be working"
 
 # Install build tools
 
-sudo apt-get install eatmydata debootstrap
+sudo -S apt-get install eatmydata debootstrap
 
 # Create necessary subvolumes
 cat <<-BANNER
@@ -37,9 +37,9 @@ Creating subvolumes
 *******************
 BANNER
 
-sudo modprobe zfs || fail 3 "Unable to load ZFS kernel module"
-sudo zfs create ${BUILD} || fail 3 "Unable to create build directory ${BUILD}"
-sudo zfs create ${ROOTRW} || fail 3 "Unable to create rootfs directory ${ROOTRW}"
+sudo -S modprobe zfs || fail 3 "Unable to load ZFS kernel module"
+sudo -S zfs create ${BUILD} || fail 3 "Unable to create build directory ${BUILD}"
+sudo -S zfs create ${ROOTRW} || fail 3 "Unable to create rootfs directory ${ROOTRW}"
 
 # Bootstrap Debian/Ubuntu
 cat <<-BANNER
@@ -48,7 +48,7 @@ Running debootstrap
 *******************
 BANNER
 
-sudo eatmydata debootstrap --include=${EXTRA} ${BASE} /${ROOTRW} ${REP}
+sudo -S eatmydata debootstrap --include=${EXTRA} ${BASE} /${ROOTRW} ${REP}
 
 # Mount proc and sys
 cat <<-BANNER
@@ -57,8 +57,8 @@ Mounting proc/sys
 *****************
 BANNER
 
-sudo mount sysfs /${ROOTRW}/sys -t sysfs
-sudo mount proc /${ROOTRW}/proc -t proc
+sudo -S mount sysfs /${ROOTRW}/sys -t sysfs
+sudo -S mount proc /${ROOTRW}/proc -t proc
 
 # Update hostname
 cat <<-BANNER
@@ -67,7 +67,7 @@ Setting Hostname
 ****************
 BANNER
 
-cat <<-EOF | sudo chroot /${ROOTRW} /bin/bash -c "cat >/etc/hostname"
+cat <<-EOF | sudo -S chroot /${ROOTRW} /bin/bash -c "cat >/etc/hostname"
 ${NAME}
 EOF
 
@@ -78,7 +78,7 @@ Setting Subutai Template Version
 ********************************
 BANNER
 
-cat <<-EOF | sudo chroot /${ROOTRW} /bin/bash -c "cat >/etc/subutai_template_version"
+cat <<-EOF | sudo -S chroot /${ROOTRW} /bin/bash -c "cat >/etc/subutai_template_version"
 ${NAME}@${VERSION}
 EOF
 
@@ -89,7 +89,7 @@ Setting Network Interfaces
 **************************
 BANNER
 
-cat <<-EOF | sudo chroot /${ROOTRW} /bin/bash -c "cat >/etc/network/interfaces"
+cat <<-EOF | sudo -S chroot /${ROOTRW} /bin/bash -c "cat >/etc/network/interfaces"
 # Subutai Networking Default Configuration
 
 # Local
@@ -110,7 +110,7 @@ Setting Repos
 BANNER
 
 if [ -n "${REPOS}" ]; then
-    echo "${REPOS}" | sudo chroot /${ROOTRW} /bin/bash -c "cat >/etc/apt/sources.list"
+    echo "${REPOS}" | sudo -S chroot /${ROOTRW} /bin/bash -c "cat >/etc/apt/sources.list"
 fi
 
 # Add Keys
@@ -121,7 +121,7 @@ Adding keys
 BANNER
 
 for KEY in ${KEYS}; do
-sudo chroot /${ROOTRW} /bin/bash -c "apt-key adv --recv-keys --keyserver keyserver.ubuntu.com ${KEY}"
+sudo -S chroot /${ROOTRW} /bin/bash -c "apt-key adv --recv-keys --keyserver keyserver.ubuntu.com ${KEY}"
 done
 
 # Run update
@@ -131,8 +131,8 @@ Updating
 ********
 BANNER
 
-sudo chroot /${ROOTRW} /bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get -y update"
-sudo chroot /${ROOTRW} /bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade"
+sudo -S chroot /${ROOTRW} /bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get -y update"
+sudo -S chroot /${ROOTRW} /bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade"
 
 # Optional extras
 cat <<-BANNER
@@ -140,7 +140,7 @@ cat <<-BANNER
 Installing extras
 *****************
 BANNER
-sudo chroot /${ROOTRW} /bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get -y --allow-unauthenticated install ${PKGS}"
+sudo -S chroot /${ROOTRW} /bin/bash -c "DEBIAN_FRONTEND=noninteractive apt-get -y --allow-unauthenticated install ${PKGS}"
 
 # Run extra commands
 cat <<-BANNER
@@ -149,7 +149,7 @@ Extra Commands
 **************
 BANNER
 
-sudo chroot /${ROOTRW} /bin/bash -c "${CMDS}"
+sudo -S chroot /${ROOTRW} /bin/bash -c "${CMDS}"
 
 # Create package list
 cat <<-BANNER
@@ -158,8 +158,8 @@ Creating package list
 *********************
 BANNER
 
-sudo chroot /${ROOTRW} /bin/bash -c "dpkg --get-selections > /packages"
-sudo mv /${ROOTRW}/packages /$BUILD
+sudo -S chroot /${ROOTRW} /bin/bash -c "dpkg --get-selections > /packages"
+sudo -S mv /${ROOTRW}/packages /$BUILD
 
 # Clean up 
 cat <<-BANNER
@@ -168,9 +168,9 @@ Cleaning up
 ***********
 BANNER
 
-sudo chroot /${ROOTRW} /bin/bash -c "apt-get -y clean"
-sudo chroot /${ROOTRW} /bin/bash -c "rm /var/cache/apt/*.bin"
-sudo chroot /${ROOTRW} /bin/bash -c "rm -rf /var/lib/apt/lists/*"
+sudo -S chroot /${ROOTRW} /bin/bash -c "apt-get -y clean"
+sudo -S chroot /${ROOTRW} /bin/bash -c "rm /var/cache/apt/*.bin"
+sudo -S chroot /${ROOTRW} /bin/bash -c "rm -rf /var/lib/apt/lists/*"
 
 # Unmount
 cat <<-BANNER
@@ -179,8 +179,8 @@ Unmounting temporary
 ********************
 BANNER
 
-sudo umount /${ROOTRW}/sys
-sudo umount /${ROOTRW}/proc
+sudo -S umount /${ROOTRW}/sys
+sudo -S umount /${ROOTRW}/proc
 
 # Deal with mounts
 cat <<-BANNER
@@ -189,19 +189,19 @@ Moving files
 ********************
 BANNER
 
-sudo zfs create ${VARRW}
+sudo -S zfs create ${VARRW}
 if ! `ls -A /${ROOTRW}/var`; then
-    sudo mv /${ROOTRW}/var/* /${VARRW}
+    sudo -S mv /${ROOTRW}/var/* /${VARRW}
 fi
 
-sudo zfs create ${OPTRW}
+sudo -S zfs create ${OPTRW}
 if ! `ls -A /${ROOTRW}/opt`; then
-    sudo mv /${ROOTRW}/opt/* /${OPTRW}
+    sudo -S mv /${ROOTRW}/opt/* /${OPTRW}
 fi
 
-sudo zfs create ${HOMERW}
+sudo -S zfs create ${HOMERW}
 if ! `ls -A /${ROOTRW}/home`; then
-    sudo mv /$ROOTRW/home/* /${HOMERW}
+    sudo -S mv /$ROOTRW/home/* /${HOMERW}
 fi
 
 # Finally snapshot all
@@ -211,10 +211,10 @@ Readonly snapshots
 ********************
 BANNER
 
-sudo zfs snapshot ${ROOTRW}@now
-sudo zfs snapshot ${VARRW}@now
-sudo zfs snapshot ${OPTRW}@now
-sudo zfs snapshot ${HOMERW}@now
+sudo -S zfs snapshot ${ROOTRW}@now
+sudo -S zfs snapshot ${VARRW}@now
+sudo -S zfs snapshot ${OPTRW}@now
+sudo -S zfs snapshot ${HOMERW}@now
 
 # Save deltas
 cat <<-BANNER
@@ -223,14 +223,14 @@ Creating deltas
 ********************
 BANNER
 
-sudo mkdir /${DELTAS}
-sudo zfs send ${ROOTRW}@now | sudo tee /${DELTAS}/rootfs.delta >/dev/null
-sudo zfs send ${VARRW}@now | sudo tee /${DELTAS}/var.delta >/dev/null
-sudo zfs send ${OPTRW}@now | sudo tee /${DELTAS}/opt.delta >/dev/null
-sudo zfs send ${HOMERW}@now | sudo tee /${DELTAS}/home.delta >/dev/null
+sudo -S mkdir /${DELTAS}
+sudo -S zfs send ${ROOTRW}@now | sudo -S tee /${DELTAS}/rootfs.delta >/dev/null
+sudo -S zfs send ${VARRW}@now | sudo -S tee /${DELTAS}/var.delta >/dev/null
+sudo -S zfs send ${OPTRW}@now | sudo -S tee /${DELTAS}/opt.delta >/dev/null
+sudo -S zfs send ${HOMERW}@now | sudo -S tee /${DELTAS}/home.delta >/dev/null
 
 # Make sure deltas can be read by a normal user
-sudo chmod 644 /${DELTAS}/*
+sudo -S chmod 644 /${DELTAS}/*
 
 # Delete subvolumes
 cat <<-BANNER
@@ -239,10 +239,10 @@ Deleting subvolumes
 ********************
 BANNER
 
-sudo zfs destroy -r ${ROOTRW}
-sudo zfs destroy -r ${VARRW}
-sudo zfs destroy -r ${OPTRW}
-sudo zfs destroy -r ${HOMERW}
+sudo -S zfs destroy -r ${ROOTRW}
+sudo -S zfs destroy -r ${VARRW}
+sudo -S zfs destroy -r ${OPTRW}
+sudo -S zfs destroy -r ${HOMERW}
 
 # Create config
 cat <<-BANNER
@@ -251,7 +251,7 @@ Creating template config
 ************************
 BANNER
 
-cat <<-EOF | sudo tee /${BUILD}/config >/dev/null
+cat <<-EOF | sudo -S tee /${BUILD}/config >/dev/null
 lxc.arch = amd64
 lxc.utsname = ${NAME}
 lxc.rootfs.backend=zfs
@@ -270,7 +270,7 @@ lxc.network.script.up = /usr/sbin/subutai-create-interface
 lxc.include = /usr/share/lxc/config/debian.common.conf
 EOF
 
-cat <<-EOF | sudo tee /${BUILD}/fstab
+cat <<-EOF | sudo -S tee /${BUILD}/fstab
 EOF
 
 # Bundle the darn thing in a tar.gz archive
@@ -290,7 +290,7 @@ Cleaning up
 ************************
 BANNER
 
-sudo zfs destroy -r ${BUILD}
+sudo -S zfs destroy -r ${BUILD}
 
 exit 0
 
