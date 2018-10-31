@@ -25,7 +25,7 @@ EXTRA=openssh-server,openssh-client,iputils-ping,vim,less,python
 # Name of resulting template
 NAME=debian-buster
 VERSION=$(git describe --abbrev=0 --tags)
-OWNER=subutai
+OWNER=lbthomsen
 
 . ./build-template
 

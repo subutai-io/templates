@@ -28,7 +28,7 @@ EXTRA=openssh-server,openssh-client,iputils-ping,less,vim,python,python3
 # Name of resulting template
 NAME=ubuntu-bionic
 VERSION=$(git describe --abbrev=0 --tags)
-OWNER=subutai
+OWNER=lbthomsen
 
 . ./build-template
 
