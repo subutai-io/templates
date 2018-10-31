@@ -22,7 +22,7 @@ END_HEREDOC
 # Extra base packages to be installed
 EXTRA=openssh-server,openssh-client,iputils-ping,less,vim,python,python3
 
-CMDS="[ -f /etc/systemd/system/multi-user.target.wants/systemd-resolved.service ] && rm /etc/systemd/system/multi-user.target.wants/systemd-resolved.service ; [ -f /etc/systemd/system/dbus-org.freedesktop.resolve1.service ] && rm /etc/systemd/system/dbus-org.freedesktop.resolve1.service"
+CMDS="[ -f /etc/systemd/system/multi-user.target.wants/systemd-resolved.service ] && rm /etc/systemd/system/multi-user.target.wants/systemd-resolved.service ; [ -f /etc/systemd/system/dbus-org.freedesktop.resolve1.service ] && rm /etc/systemd/system/dbus-org.freedesktop.resolve1.service ; rm /etc/resolv.conf ; touch /etc/resolv.conf"
 
 # Install with full repos
 #PKGS=vim
