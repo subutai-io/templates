@@ -1,0 +1,32 @@
+#!/bin/sh
+
+# A working btrfs mount point - any will do as long as root have write access
+ZFS_ROOT=p0/subutai
+
+# A folder which is used exclusively for this - can NOT exist and WILL
+# be cleaned out when done!
+ZFS_BUILD=build
+
+# Set base
+BASE=testing
+REP=http://deb.debian.org/debian/
+
+# Repos
+REPOS=$(cat <<'END_HEREDOC'
+deb http://httpredir.debian.org/debian/ buster main contrib non-free
+deb http://httpredir.debian.org/debian/ buster-updates main contrib non-free
+deb http://security.debian.org/debian-security buster/updates main
+END_HEREDOC
+)
+
+# Extra base packages to be installed
+EXTRA=openssh-server,openssh-client,iputils-ping,vim,less,python
+
+# Name of resulting template
+NAME=debian-buster
+VERSION=$(git describe --abbrev=0 --tags)
+OWNER=subutai
+
+. ./build-template
+
+# vim: ts=4 et nowrap autoindent
