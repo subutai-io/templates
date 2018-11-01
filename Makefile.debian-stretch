@@ -1,0 +1,18 @@
+# 
+# Makefile for building Subutai Base Templates
+#
+
+
+# Settings
+ZPOOL=subutai
+ZFS_BUILD=build
+VERSION=0.4.0
+OWNER=lbthomsen
+
+all: $(BUILD)
+
+.PHONY: all clean
+
+include inc/build.mk
+
+# vim: ts=8 nowrap autoindent
