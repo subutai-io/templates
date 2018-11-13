@@ -6,12 +6,10 @@
 # Settings
 ZPOOL=subutai
 ZFS_BUILD=build
+NAME=debian-stretch
 VERSION=0.4.0
 OWNER=lbthomsen
-
-all: $(BUILD)
-
-.PHONY: all clean
+BASE=stable
 
 include inc/build.mk
 
