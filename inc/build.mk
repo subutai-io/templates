@@ -8,35 +8,43 @@
 BUILD=/$(ZPOOL)/$(ZFS_BUILD)
 OS=$(BUILD)/$(NAME)
 ROOTFS=$(BUILD)/$(NAME)/rootfs
-VARFS=$(BUILD)/$(NAME)/$(ROOTFS)/var
-OPTFS=$(BUILD)/$(NAME)/$(ROOTFS)/opt
-HOMEFS=$(BUILD)/$(NAME)/$(ROOTFS)/home
+VARFS=$(ROOTFS)/var
+OPTFS=$(ROOTFS)/opt
+HOMEFS=$(ROOTFS)/home
+CACHE=/var/tmp/debootstrap
 
-all: | $(ROOTFS)/etc/
+all: | $(ROOTFS)/etc
 
-$(ROOTFS)/etc/:  $(HOMEFS)/ $(OPTFS)/ $(VARFS)/
-	@sudo debootstrap $(BASE) /${ROOTFS}
+$(ROOTFS)/etc:  $(HOMEFS) $(OPTFS) $(VARFS) $(CACHE)
+	@sudo debootstrap --cache-dir=$(CACHE) $(BASE) /${ROOTFS}
 
-$(HOMEFS)/: $(ROOTFS)/
-	@sudo zfs create $(ZPOOL)/$(ZFS_BUILD)/$(NAME)/rootfs/home
+$(HOMEFS): $(ROOTFS)
+	@echo "Checking $(HOMEFS)"
+	@sudo bash -c '[ -d "$(HOMEFS)" ] || zfs create $(ZPOOL)/$(ZFS_BUILD)/$(NAME)/rootfs/home || true'
 
-$(OPTFS)/: | $(ROOTFS)/
-	@sudo zfs create $(ZPOOL)/$(ZFS_BUILD)/$(NAME)/rootfs/opt
+$(OPTFS): | $(ROOTFS)
+	@echo "Checking $(OPTFS)"
+	@sudo bash -c '[ -d "$(OPTFS)" ] || zfs create $(ZPOOL)/$(ZFS_BUILD)/$(NAME)/rootfs/opt || true'
 
-$(VARFS)/: | $(ROOTFS)/
-	@sudo zfs create $(ZPOOL)/$(ZFS_BUILD)/$(NAME)/rootfs/var
+$(VARFS): | $(ROOTFS)
+	@echo "Checking $(VARFS)"
+	@sudo bash -c '[ -d "$(VARFS)" ] || zfs create $(ZPOOL)/$(ZFS_BUILD)/$(NAME)/rootfs/var || true'
 
-$(ROOTFS)/: | $(OS)/
-	@sudo zfs create $(ZPOOL)/$(ZFS_BUILD)/$(NAME)/rootfs
+$(ROOTFS): | $(OS)
+	@echo "Checking $(ROOTFS)"
+	@sudo bash -c '[ -d "$(ROOTFS)" ] || zfs create $(ZPOOL)/$(ZFS_BUILD)/$(NAME)/rootfs || true'
 
-$(OS)/: | $(BUILD)/
-	@sudo zfs create $(ZPOOL)/$(ZFS_BUILD)/$(NAME)
+$(OS): | $(BUILD)
+	@sudo bash -c '[ -d "$(OS)" ] || zfs create $(ZPOOL)/$(ZFS_BUILD)/$(NAME) || true'
 
-$(BUILD)/: /$(ZPOOL)/
-	@sudo zfs create $(ZPOOL)/$(ZFS_BUILD)
+$(BUILD): /$(ZPOOL)
+	@sudo bash -c '[ -d "$(BUILD)" ] || zfs create $(ZPOOL)/$(ZFS_BUILD) || true'
 
-/$(ZPOOL)/:
+/$(ZPOOL):
 	@echo "The zpool $(ZPOOL) does not exit" ; exit 1
+
+$(CACHE): 
+	@sudo bash -c '[ -d "$(CACHE)"] || mkdir $(CACHE)'
 
 clean: 
 	@sudo bash -c '[ -d "$(BUILD)" ] && zfs destroy -r $(ZPOOL)/$(ZFS_BUILD) || true'
