@@ -10,6 +10,8 @@ NAME=debian-stretch
 VERSION=0.4.0
 OWNER=lbthomsen
 BASE=stable
+REP=http://deb.debian.org/debian/
+EXTRA=openssh-server,openssh-client,iputils-ping,vim,less,python
 
 include inc/build.mk
 
