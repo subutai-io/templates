@@ -30,7 +30,7 @@ CMDS="[ -f /etc/systemd/system/multi-user.target.wants/systemd-resolved.service 
 # Name of resulting template
 NAME=ubuntu-bionic
 VERSION=$(git describe --abbrev=0 --tags)
-OWNER=lbthomsen
+OWNER=subutai
 
 . ./build-template
 
