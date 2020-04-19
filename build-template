@@ -285,8 +285,8 @@ Creating Bundle
 BANNER
 
 [ -d ${CWD}/build ] || mkdir ${CWD}/build
-(cd /${BUILD} ; tar cz * >${CWD}/build/${NAME}-subutai-template_${VERSION}_amd64.tar.gz)
-ls -l ${CWD}/build/${NAME}-subutai-template_${VERSION}_amd64.tar.gz
+(cd /${BUILD} ; tar cz * >${CWD}/build/${NAME}-${OWNER}-template_${VERSION}_amd64.tar.gz)
+ls -l ${CWD}/build/${NAME}-${OWNER}-template_${VERSION}_amd64.tar.gz
 
 # Finally nuke build
 cat <<-BANNER
