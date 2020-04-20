@@ -8,7 +8,7 @@ ZFS_ROOT=p0/subutai
 ZFS_BUILD=build
 
 # Set base
-BASE=oldstable
+BASE=stretch
 REP=http://deb.debian.org/debian/
 
 # Repos
