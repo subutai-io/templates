@@ -270,7 +270,7 @@ lxc.mount.entry=/var/lib/lxc/${NAME}:${OWNER}:${VERSION}/home home none bind,rw 
 lxc.rootfs=/var/lib/lxc/${NAME}:${OWNER}:${VERSION}/rootfs
 lxc.network.type = veth
 lxc.network.script.up = /usr/sbin/subutai-create-interface
-lxc.include = /usr/share/lxc/config/subutai.conf
+lxc.include = /usr/share/subutai/config/subutai.conf
 lxc.tty = 0
 EOF
 
