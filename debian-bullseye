@@ -9,7 +9,7 @@ ZFS_BUILD=build
 
 # Set base
 BASE=bullseye
-REP=http://deb.debian.org/debian/
+REP=https://deb.debian.org/debian/
 
 # Repos
 REPOS=$(cat <<'END_HEREDOC'
