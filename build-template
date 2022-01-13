@@ -41,8 +41,6 @@ sudo -S modprobe zfs || fail 3 "Unable to load ZFS kernel module"
 sudo -S zfs create ${BUILD} || fail 3 "Unable to create build directory ${BUILD}"
 sudo -S zfs create ${ROOTRW} || fail 3 "Unable to create rootfs directory ${ROOTRW}"
 
-sleep 5
-
 # Bootstrap Debian/Ubuntu
 cat <<-BANNER
 *******************
@@ -50,7 +48,6 @@ Running debootstrap
 *******************
 BANNER
 
-#sudo -S eatmydata debootstrap --include=${EXTRA} ${BASE} /${ROOTRW} ${REP}
 sudo -S cdebootstrap --include=${EXTRA} ${BASE} /${ROOTRW} ${REP}
 
 # Mount proc and sys
