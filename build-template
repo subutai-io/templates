@@ -48,7 +48,7 @@ Running debootstrap
 *******************
 BANNER
 
-sudo -S cdebootstrap --include=${EXTRA} ${BASE} /${ROOTRW} ${REP}
+sudo -S cdebootstrap --allow-unauthenticated --include=${EXTRA} ${BASE} /${ROOTRW} ${REP}
 
 # Mount proc and sys
 cat <<-BANNER
