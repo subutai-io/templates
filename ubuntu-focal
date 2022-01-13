@@ -1,0 +1,37 @@
+#!/bin/sh
+
+# A working btrfs mount point - any will do as long as root have write access
+ZFS_ROOT=p0/subutai
+
+# A folder which is used exclusively for this - can NOT exist and WILL
+# be cleaned out when done!
+ZFS_BUILD=build
+
+# Set base
+BASE=focal
+REP=http://archive.ubuntu.com/ubuntu/
+
+# Repos
+REPOS=$(cat <<'END_HEREDOC'
+deb http://us.archive.ubuntu.com/ubuntu/ focal main restricted universe multiverse
+deb http://us.archive.ubuntu.com/ubuntu/ focal-updates main restricted universe multiverse
+deb http://security.ubuntu.com/ubuntu focal-security main restricted universe multiverse
+END_HEREDOC
+)
+
+# Extra base packages to be installed
+EXTRA=openssh-server,openssh-client,iputils-ping,less,vim,python,python3
+
+CMDS="[ -f /etc/systemd/system/multi-user.target.wants/systemd-resolved.service ] && rm /etc/systemd/system/multi-user.target.wants/systemd-resolved.service ; [ -f /etc/systemd/system/dbus-org.freedesktop.resolve1.service ] && rm /etc/systemd/system/dbus-org.freedesktop.resolve1.service ; rm /etc/resolv.conf ; touch /etc/resolv.conf"
+
+# Install with full repos
+#PKGS=vim
+
+# Name of resulting template
+NAME=ubuntu-focal
+VERSION=$(git describe --abbrev=0 --tags)
+OWNER=subutai
+
+. ./build-template
+
+# vim: ts=4 et nowrap autoindent
